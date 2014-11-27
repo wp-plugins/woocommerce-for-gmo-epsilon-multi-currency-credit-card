@@ -1,5 +1,5 @@
 === WooCommerce for GMO Epsilon Multi-currency Credit Card===
-Contributors: 職人工房
+Contributors: artisan-workshop-1, shohei.tanaka
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=info@artws.info&item_name=Donation+for+Artisan&currency_code=JPY
 Tags: credit cards, woocommerce, ecommerce, e-commerce, payment, payment Gateway, japan,Multi currency epsilon
 Requires at least: 3.8
