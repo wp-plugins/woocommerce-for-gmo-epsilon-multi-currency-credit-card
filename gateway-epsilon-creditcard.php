@@ -4,7 +4,7 @@
  * Plugin Name: WooCommerce Payment Gateway Multi-currency Credit Card- GMO Epsilon
  * Plugin URI: http://www.wp-pay.com/
  * Description: Accept Multi-currency credit cards directly on your WooCommerce site in a seamless and secure checkout environment with GMO Epsilon Commerce.
- * Version: 0.9.0
+ * Version: 0.9.1
  * Author: 職人工房
  * Author URI: http://wc.artws.info/
  * License: GPL version 2 or later - http://www.gnu.org/licenses/old-licenses/gpl-3.0.html
@@ -333,12 +333,12 @@ function woocommerce_gmo_epsilon_mccc_creditcard_init() {
 		'mission_code' => 1,
 		'memo2' 	=> 'woocommerce',
 		'character_code' 	=> 'UTF8',
-		'currency_id' 	=> $currency
+		'currency_id' 	=> $currency,
+		'tds_check_code' => ''
         );
 
 		// Send request and get response from server
 		$response = $this->post_and_get_response( array_merge( $transaction_details,$base_request ) );
-		$respsnse['err_detail'] = $respsnse['err_detail'];
 
       // Check response
       if ( $response['result'] == 1 ) {
@@ -352,15 +352,39 @@ function woocommerce_gmo_epsilon_mccc_creditcard_init() {
           'redirect' => $this->get_return_url( $order ),
         );
 
-      } else if ( $response['result'] == 3 ) {//3DS
+      } else if ( $response['result'] == 5 ) {//3DS
+//		$order_key = get_post_meta($order->id, '_order_key', true);
+//		$current_url = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+//		$term_url = 'http://wc21.ecshop4u.info/checkout/order-received/'.$order->id.'/?key='.$order_key;
+		$term_url = $this->get_return_url( $order );
+		session_start();
+		$_SESSION['acsurl'] = urldecode($response['acsurl']);
+		$_SESSION['PaReq'] = urldecode($response['pareq']);
+		$_SESSION['TermUrl'] = urldecode($term_url);
+		$_SESSION['MD'] = $order->id;
+			// Mark as on-hold (we're awaiting the payment)
+			$order->update_status( 'on-hold', __( '3DSecure Payment Processing.', 'woocommerce-4jp' ) );
 
+			// Reduce stock levels
+			$order->reduce_order_stock();
+
+			// Remove cart
+			WC()->cart->empty_cart();
+			return array(
+				'result' 	=> 'success',
+				'redirect'	=> plugins_url('/woocommerce-for-gmo-epsilon-multi-currency-credit-card/3ds.php')
+			);
+			
       } else if ( $response['result'] == 9 ) {//System Error
         // Other transaction error
-        $order->add_order_note( __( 'Epsilon Payment failed. Sysmte Error: ', 'wc-epsilon' ) . $response['err_code'] .':'. $response['err_detail'] .':'.$response['trans_code']);
+        $order->add_order_note( __( 'Epsilon Payment failed. Sysmte Error: ', 'wc-epsilon' ) . $response['err_code'] .':'. urldecode($response['err_detail']) .':'.$response['trans_code']);
         $woocommerce->add_error( __( 'Sorry, there was an error: ', 'wc-epsilon' ) . $response['err_code'] );
+      } else if ( $response['result'] == 0 ) {//Payment NG
+        $order->add_order_note( __( "Epsilon Payment failed. Some trouble happened.", 'wc-epsilon' ). $response['err_code'] .':'. urldecode($response['err_detail']).':'.$response['trans_code'] );
+        $woocommerce->add_error( __( 'Payment NG.', 'wc-epsilon' ). $response['err_code'] );
       } else {
         // No response or unexpected response
-        $order->add_order_note( __( "Epsilon Payment failed. Some trouble happened.", 'wc-epsilon' ). $response['err_code'] .':'. $response['err_detail'].':'.$response['trans_code'] );
+        $order->add_order_note( __( "Epsilon Payment failed. Some trouble happened.", 'wc-epsilon' ). $response['err_code'] .':'. urldecode($response['err_detail']).':'.$response['trans_code'] );
         $woocommerce->add_error( __( 'No response from payment gateway server. Try again later or contact the site administrator.', 'wc-epsilon' ). $response['err_code'] );
 
       }
@@ -526,7 +550,7 @@ function woocommerce_gmo_epsilon_mccc_creditcard_init() {
 
 		}
 
-		/**
+    /**
      * Send the payment data to the gateway server and return the response.
      */
     private function post_and_get_response( $request ) {
@@ -630,5 +654,20 @@ function woocommerce_gmo_epsilon_mccc_creditcard_init() {
 	}
 
 	add_filter( 'woocommerce_payment_gateways', 'add_epsilon_mccc_commerce_gateway' );
+
+	/**
+	 * Edit the available gateway to woocommerce
+	 */
+	function edit_available_gateways_epsilon_mccc( $_available_gateways ) {
+		if ( ! $currency ) {
+			$currency = get_woocommerce_currency();
+		}
+		if($currency =='JPY'){
+		unset($_available_gateways['epsilon_mccc']);
+		}
+		return $_available_gateways;
+	}
+
+	add_filter( 'woocommerce_available_payment_gateways', 'edit_available_gateways_epsilon_mccc' );
 
 }

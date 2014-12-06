@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=info@art
 Tags: credit cards, woocommerce, ecommerce, e-commerce, payment, payment Gateway, japan,Multi currency epsilon
 Requires at least: 3.8
 Tested up to: 3.9
-Stable tag: 0.9.0
+Stable tag: 0.9.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -78,6 +78,8 @@ http://support.artws.info/forums/forum/gmo-epsilon-payment/
 2. Credit Input Form
 
 == Changelog ==
+= 0.9.1 =
+3DS bug Fixed
 = 0.9.0 =
 make beta version
 
