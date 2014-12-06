@@ -14,7 +14,7 @@ GMO Epsilon Multi-currency Credit Card Payment Gateway plugin provides online pa
 
 = In Japanese: =
 
-このプラグインはWooCommerceでGMO イプシロン他通貨クレジット決済を使う為に必要なプラグインです。
+このプラグインはWooCommerceでGMO イプシロン多通貨クレジット決済を使う為に必要なプラグインです。
 
 このプラグインはWooCommerceの日本語レビュアーによって作成されています。
 
